@@ -15,7 +15,7 @@ public static class Program
         await SyncItems(httpClient, Items, CancellationToken.None);
     }
     
-    static async Task SyncItems(IHttpClient httpClient, Dictionary<string, byte[]> items, CancellationToken cancellationToken)
+    public static async Task SyncItems(IHttpClient httpClient, Dictionary<string, byte[]> items, CancellationToken cancellationToken)
     {
         await httpClient.PostJsonAsync("/api/session", new { username = "Orion", password = "secret" }, cancellationToken);
 
