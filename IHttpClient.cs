@@ -32,7 +32,7 @@ public static class IHttpClientExtensions
         => SendJsonAsync<object, TResponseBody>(client, HttpMethod.Get, url, null, cancellationToken);
     
     public static Task PostJsonAsync<TRequestBody>(this IHttpClient client, string url, TRequestBody? body, CancellationToken cancellationToken)
-        => SendJsonAsync<object, object>(client, HttpMethod.Post, url, body, cancellationToken);
+        => SendJsonAsync<object, object?>(client, HttpMethod.Post, url, body, cancellationToken);
     
     public static async Task<TResponseBody> SendJsonAsync<TRequestBody, TResponseBody>(
         this IHttpClient client, 
@@ -57,7 +57,9 @@ public static class IHttpClientExtensions
             throw new InvalidHttpResponseException($"Unexpected HTTP Response {response.StatusCode}");
 
         var responseText = await response.Content.ReadAsStringAsync(cancellationToken);
-        return JsonSerializer.Deserialize<TResponseBody>(responseText);
+        return string.IsNullOrEmpty(responseText) ? 
+            default(TResponseBody) : 
+            JsonSerializer.Deserialize<TResponseBody>(responseText);
     } 
 }
 
