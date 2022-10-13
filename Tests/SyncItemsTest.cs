@@ -1,3 +1,4 @@
+using System.Net;
 using AsyncUnitTestingPres;
 using NSubstitute;
 
@@ -9,8 +10,15 @@ public class SyncItemsTest
     public async Task SyncsNoItems()
     {
         var httpClient = Substitute.For<IHttpClient>();
-        var items = new Dictionary<string, byte[]>();
+        var cancellationToken = CancellationToken.None;
 
-        await Program.SyncItems(httpClient, items, CancellationToken.None);
+        var r1 = new HttpRequestMessage
+        {
+            Method = HttpMethod.Post,
+            RequestUri = new Uri("/api/session", UriKind.RelativeOrAbsolute),
+        };
+        httpClient.SendAsync(r1, cancellationToken).Returns(new HttpResponseMessage(HttpStatusCode.Created));
+
+        await Program.SyncItems(httpClient, new Dictionary<string, byte[]>(), cancellationToken);
     }
 }
