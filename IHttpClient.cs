@@ -44,7 +44,7 @@ public static class IHttpClientExtensions
         var req = new HttpRequestMessage
         {
             Method = method,
-            RequestUri = new Uri(url),
+            RequestUri = new Uri(url, UriKind.Relative),
         };
         if (body != null)
         {
