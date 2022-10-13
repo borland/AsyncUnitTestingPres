@@ -26,7 +26,7 @@ public static class Program
         {
             if(itemSet.Contains(itemName)) continue;
             
-            var req = new HttpRequestMessage(HttpMethod.Post, new Uri($"/api/items?name={itemName}"));
+            var req = new HttpRequestMessage(HttpMethod.Post, new Uri($"/api/items?name={itemName}", UriKind.Relative));
             req.Content = new ByteArrayContent(itemValue);
 
             var response = await httpClient.SendAsync(req, cancellationToken);
