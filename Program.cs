@@ -17,10 +17,10 @@ public static class Program
     
     public static async Task SyncItems(IHttpClient httpClient, Dictionary<string, byte[]> items, CancellationToken cancellationToken)
     {
-        await httpClient.PostJsonAsync("/api/session", new { username = "Orion", password = "secret" }, cancellationToken);
+        await httpClient.PostJsonAsync("/api/session", new { username = "Orion", password = "secret" }, cancellationToken).ConfigureAwait(false);
 
         var itemSet = new HashSet<string>
-            (await httpClient.GetJsonAsync<string[]>("/api/items", cancellationToken));
+            (await httpClient.GetJsonAsync<string[]>("/api/items", cancellationToken).ConfigureAwait(false));
         
         foreach (var (itemName, itemValue) in items)
         {
@@ -29,7 +29,7 @@ public static class Program
             var req = new HttpRequestMessage(HttpMethod.Post, new Uri($"/api/items?name={itemName}", UriKind.Relative));
             req.Content = new ByteArrayContent(itemValue);
 
-            var response = await httpClient.SendAsync(req, cancellationToken);
+            var response = await httpClient.SendAsync(req, cancellationToken).ConfigureAwait(false);
             if(!response.IsSuccessStatusCode) throw new InvalidHttpResponseException($"Unexpected HTTP Response {response.StatusCode}");
         }
     }

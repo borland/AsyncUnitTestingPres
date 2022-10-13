@@ -56,7 +56,7 @@ public static class IHttpClientExtensions
         if (!response.IsSuccessStatusCode)
             throw new InvalidHttpResponseException($"Unexpected HTTP Response {response.StatusCode}");
 
-        var responseText = await response.Content.ReadAsStringAsync(cancellationToken);
+        var responseText = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
         return string.IsNullOrEmpty(responseText) ? 
             default(TResponseBody) : 
             JsonSerializer.Deserialize<TResponseBody>(responseText);

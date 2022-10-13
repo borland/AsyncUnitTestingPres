@@ -23,8 +23,8 @@ public class SyncItemsTest
         
         var outerSyncTask = Program.SyncItems(httpClient, localItems, cancellationToken); // NOTE NO AWAIT
 
-        (await httpClient.ExpectJsonRequest(HttpMethod.Post, "/api/session", new LoginRequest("Orion", "secret")))
-            .Response.SetResult(new HttpResponseMessage());
+        var ctx1 = await httpClient.ExpectJsonRequest(HttpMethod.Post, "/api/session", new LoginRequest("Orion", "secret"));
+        ctx1.Response.SetResult(new HttpResponseMessage());
         
         (await httpClient.ExpectRequest(HttpMethod.Get, "/api/items"))
             .Response.SetResult(new HttpResponseMessage{ Content = new StringContent(JsonSerializer.Serialize(new string[0]))});
