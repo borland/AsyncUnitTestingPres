@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text;
 using System.Text.Json;
 using AsyncUnitTestingPres;
@@ -23,41 +24,41 @@ public class SyncItemsTest
         
         var outerSyncTask = Program.SyncItems(httpClient, localItems, cancellationToken); // NOTE NO AWAIT
 
-        var ctx1 = await httpClient.ExpectJsonRequest(HttpMethod.Post, "/api/session", new LoginRequest("Orion", "secret"));
-        ctx1.Response.SetResult(new HttpResponseMessage());
+        var r = await httpClient.ExpectJsonRequest(HttpMethod.Post, "/api/session", new LoginRequest("Orion", "secret"));
+        r.RespondWith(HttpStatusCode.OK);
         
-        (await httpClient.ExpectRequest(HttpMethod.Get, "/api/items"))
-            .Response.SetResult(new HttpResponseMessage{ Content = new StringContent(JsonSerializer.Serialize(new string[0]))});
+        r = await httpClient.ExpectRequest(HttpMethod.Get, "/api/items");
+        r.RespondWithJson(HttpStatusCode.OK, new string[0]);
         
-        var ctx = await httpClient.ExpectRequest(HttpMethod.Post, "/api/items?name=item1.txt");
-        var s = await ctx.Request.Content!.ReadAsStringAsync();
-        s.Should().Be("Hello");
-        ctx.Response.SetResult(new HttpResponseMessage());
+        r = await httpClient.ExpectRequest(HttpMethod.Post, "/api/items?name=item1.txt");
+        (await r.RequestBodyAsString()).Should().Be("Hello");
+        r.RespondWith(HttpStatusCode.OK);
         
-        ctx = await httpClient.ExpectRequest(HttpMethod.Post, "/api/items?name=item2.txt");
-        s = await ctx.Request.Content!.ReadAsStringAsync();
-        s.Should().Be("World");
-        ctx.Response.SetResult(new HttpResponseMessage());
+        r = await httpClient.ExpectRequest(HttpMethod.Post, "/api/items?name=item2.txt");
+        (await r.RequestBodyAsString()).Should().Be("World");
+        r.RespondWith(HttpStatusCode.OK);
 
-        await outerSyncTask;
+        await outerSyncTask; // this would throw if it failed
     }
 }
 
 public static class MockHttpClientExtensions
 {
-    public static async Task<MockRequestContext> ExpectRequest(this MockHttpClient httpClient, HttpMethod method, string url)
+    public static async Task<MockRequestContext> ExpectRequest(this MockHttpClient httpClient, HttpMethod method,
+        string url)
     {
         var ctx = await httpClient.NextRequest();
         ctx.Should().NotBeNull();
-        
+
         ctx.Request.Should().NotBeNull();
         ctx.Request.Method.Should().Be(method);
         ctx.Request.RequestUri.ToString().Should().Be(url);
 
         return ctx;
     }
-    
-    public static async Task<MockRequestContext> ExpectJsonRequest<TRequestBody>(this MockHttpClient httpClient, HttpMethod method, string url, TRequestBody? body = default)
+
+    public static async Task<MockRequestContext> ExpectJsonRequest<TRequestBody>(this MockHttpClient httpClient,
+        HttpMethod method, string url, TRequestBody? body = default)
     {
         var ctx = await ExpectRequest(httpClient, method, url);
 
@@ -72,7 +73,35 @@ public static class MockHttpClientExtensions
     }
 }
 
-public record MockRequestContext(HttpRequestMessage Request, TaskCompletionSource<HttpResponseMessage> Response); 
+public record MockRequestContext(HttpRequestMessage Request, TaskCompletionSource<HttpResponseMessage> Response);
+
+public static class MockRequestContextExtensions
+{
+    public static void RespondWith(this MockRequestContext ctx, HttpStatusCode statusCode)
+    {
+        ctx.Response.SetResult(new HttpResponseMessage(statusCode));
+    }
+    
+    public static void RespondWithJson(this MockRequestContext ctx,  HttpStatusCode statusCode, object responseBody)
+    {
+        var json = JsonSerializer.Serialize(responseBody);
+        ctx.Response.SetResult(
+            new HttpResponseMessage(statusCode)
+            {
+                Content = new StringContent(json)
+                
+            });
+    }
+
+    public static async Task<string> RequestBodyAsString(this MockRequestContext ctx)
+    {
+        if (ctx.Request.Content is null)
+            throw new ArgumentException("expected request to contain content, it didn't");
+        
+        return await ctx.Request.Content.ReadAsStringAsync();
+    }
+}
+
 
 public class MockHttpClient : IHttpClient
 {
