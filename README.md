@@ -23,3 +23,7 @@ Suggestion: Clone the repository, and switch to the `1-initial` branch, look at 
 `5-tcs-foundation` - this shows a concept - using a queue of functions to handle, verify, and respond to requests. It doesn't form part of the final solution, but provides a core insight that helps understand the next parts.
 
 `5a -> d` - this series of branches show the evolution towards using async to make the mock serve as a simple pipe between the system-under-test and the unit test itself. Most of the 'mocking' is now simply inline inside the unit test.
+
+**Note**
+
+The final "end state" is here: [blob/5d-tcs-all-nice/Tests/SyncItemsTest.cs](https://github.com/borland/AsyncUnitTestingPres/blob/5d-tcs-all-nice/Tests/SyncItemsTest.cs)
